@@ -7,7 +7,7 @@ use risc0_zkvm_platform::syscall::{bigint, sys_bigint};
 
 // TODO(victor): Are there any safety concerns with the fact that the output from sys_bigint may
 // not be reduced. If so, we can introduce a check here to make sure it's less than the modulus.
-pub(crate) const fn mul_montgomery_form<const LIMBS: usize>(
+pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
     a: &Uint<LIMBS>,
     b: &Uint<LIMBS>,
     modulus: &Uint<LIMBS>,
@@ -42,7 +42,7 @@ pub(crate) const fn mul_montgomery_form<const LIMBS: usize>(
     montgomery_reduction::<LIMBS>(&product, modulus, mod_neg_inv)
 }
 
-pub(crate) const fn square_montgomery_form<const LIMBS: usize>(
+pub(crate) fn square_montgomery_form<const LIMBS: usize>(
     a: &Uint<LIMBS>,
     modulus: &Uint<LIMBS>,
     mod_neg_inv: Limb,

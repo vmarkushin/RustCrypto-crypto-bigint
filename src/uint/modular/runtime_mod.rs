@@ -26,6 +26,8 @@ pub struct DynResidueParams<const LIMBS: usize> {
     r2: Uint<LIMBS>,
     // R^3, used to compute the multiplicative inverse
     r3: Uint<LIMBS>,
+    // R^-1, used in the RISC Zero implementation to remove one factor of R after multiplication.
+    r_inv: Uint<LIMBS>,
     // The lowest limbs of -(MODULUS^-1) mod R
     // We only need the LSB because during reduction this value is multiplied modulo 2**Limb::BITS.
     mod_neg_inv: Limb,
@@ -45,11 +47,15 @@ impl<const LIMBS: usize> DynResidueParams<LIMBS> {
 
         let r3 = montgomery_reduction(&r2.square_wide(), modulus, mod_neg_inv);
 
+        // r must have an inverse mod modulus since the modulus does not divide 2^k.
+        let r_inv = r.inv_odd_mod(modulus).0;
+
         Self {
             modulus: *modulus,
             r,
             r2,
             r3,
+            r_inv,
             mod_neg_inv,
         }
     }

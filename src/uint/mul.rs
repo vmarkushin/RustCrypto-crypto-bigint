@@ -17,6 +17,7 @@ impl<const LIMBS: usize> Uint<LIMBS> {
     ///
     /// For more info see: <https://github.com/RustCrypto/crypto-bigint/issues/4>
     // TODO(tarcieri): use `concat` to construct a wide output
+    // TODO(victor): Use sys_bigint to implement mul_wide for U128
     pub const fn mul_wide(&self, rhs: &Self) -> (Self, Self) {
         let mut i = 0;
         let mut lo = Self::ZERO;
@@ -85,6 +86,7 @@ impl<const LIMBS: usize> Uint<LIMBS> {
     }
 
     /// Square self, returning a "wide" result in two parts as (lo, hi).
+    // TODO(victor): Use sys_bigint to implement square_wide for U128
     pub const fn square_wide(&self) -> (Self, Self) {
         // Translated from https://github.com/ucbrise/jedi-pairing/blob/c4bf151/include/core/bigint.hpp#L410
         //

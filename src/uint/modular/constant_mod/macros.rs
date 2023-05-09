@@ -36,6 +36,9 @@ macro_rules! impl_modulus {
                     &Self::MODULUS,
                     Self::MOD_NEG_INV,
                 );
+            const R_INV: $crate::Uint<{ $crate::nlimbs!(<$uint_type>::BITS) }> =
+                // R must have an inverse mod modulus since the modulus does not divide 2^k.
+                $name::R.inv_odd_mod(&$name::MODULUS).0;
         }
     };
 }

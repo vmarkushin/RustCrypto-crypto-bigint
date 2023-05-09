@@ -13,6 +13,7 @@ pub const fn pow_montgomery_form<const LIMBS: usize>(
     modulus: &Uint<LIMBS>,
     r: &Uint<LIMBS>,
     mod_neg_inv: Limb,
+    r_inv: &Uint<LIMBS>,
 ) -> Uint<LIMBS> {
     if exponent_bits == 0 {
         return *r; // 1 in Montgomery form
@@ -26,7 +27,7 @@ pub const fn pow_montgomery_form<const LIMBS: usize>(
     powers[1] = *x;
     let mut i = 2;
     while i < powers.len() {
-        powers[i] = mul_montgomery_form(&powers[i - 1], x, modulus, mod_neg_inv);
+        powers[i] = mul_montgomery_form(&powers[i - 1], x, modulus, mod_neg_inv, r_inv);
         i += 1;
     }
 
@@ -58,7 +59,7 @@ pub const fn pow_montgomery_form<const LIMBS: usize>(
                 let mut i = 0;
                 while i < WINDOW {
                     i += 1;
-                    z = square_montgomery_form(&z, modulus, mod_neg_inv);
+                    z = square_montgomery_form(&z, modulus, mod_neg_inv, r_inv);
                 }
             }
 
@@ -71,7 +72,7 @@ pub const fn pow_montgomery_form<const LIMBS: usize>(
                 i += 1;
             }
 
-            z = mul_montgomery_form(&z, &power, modulus, mod_neg_inv);
+            z = mul_montgomery_form(&z, &power, modulus, mod_neg_inv, r_inv);
         }
     }
 

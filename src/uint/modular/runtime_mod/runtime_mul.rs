@@ -16,6 +16,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
                 &rhs.montgomery_form,
                 &self.residue_params.modulus,
                 self.residue_params.mod_neg_inv,
+                &self.residue_params.r_inv,
             ),
             residue_params: self.residue_params,
         }
@@ -28,6 +29,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
                 &self.montgomery_form,
                 &self.residue_params.modulus,
                 self.residue_params.mod_neg_inv,
+                &self.residue_params.r_inv,
             ),
             residue_params: self.residue_params,
         }

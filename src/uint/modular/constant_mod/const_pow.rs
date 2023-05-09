@@ -26,6 +26,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
                 &MOD::MODULUS,
                 &MOD::R,
                 MOD::MOD_NEG_INV,
+                &MOD::R_INV,
             ),
             phantom: core::marker::PhantomData,
         }

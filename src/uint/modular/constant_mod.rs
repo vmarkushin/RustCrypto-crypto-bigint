@@ -92,7 +92,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     pub fn new(integer: &Uint<LIMBS>) -> Self {
         let product = integer.mul_wide(&MOD::R2);
         let montgomery_form =
-            montgomery_reduction::<LIMBS>(&product, &MOD::MODULUS, MOD::MOD_NEG_INV);
+            montgomery_reduction::<LIMBS>(&product, &MOD::MODULUS, MOD::MOD_NEG_INV, &MOD::R_INV);
 
         Self {
             montgomery_form,
@@ -106,6 +106,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
             &(self.montgomery_form, Uint::ZERO),
             &MOD::MODULUS,
             MOD::MOD_NEG_INV,
+            &MOD::R_INV,
         )
     }
 

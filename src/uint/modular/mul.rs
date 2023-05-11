@@ -16,10 +16,10 @@ pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
 ) -> Uint<LIMBS> {
     #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
     if LIMBS == bigint::WIDTH_WORDS {
-        let mut result = core::mem::MaybeUninit::<[u32; LIMBS]>::uninit();
-        return Uint::<LIMBS>::from_words(unsafe {
+        let result = Uint::<LIMBS>::from_words(unsafe {
+            let mut out = core::mem::MaybeUninit::<[u32; LIMBS]>::uninit();
             sys_bigint(
-                result.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
+                out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
                 bigint::OP_MULTIPLY,
                 a.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 b.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
@@ -28,18 +28,22 @@ pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
             // a and b are in montgomery form (a' * R) and (b' * R).
             // Getting the final result ((a' * b') * R) requires removing a multiple of R.
             sys_bigint(
-                result.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
+                out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
                 bigint::OP_MULTIPLY,
                 result.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
-                r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                _r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 modulus.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
             );
-            result.assume_init()
+            out.assume_init()
         });
+        // Assert that the Prover returned the canonical representation of the result, i.e. that it
+        // is fully reduced and has no multiples of the modulus included.
+        assert!(result.ct_lt(&modulus).into());
+        result
     }
 
     let product = a.mul_wide(b);
-    montgomery_reduction::<LIMBS>(&product, modulus, mod_neg_inv)
+    montgomery_reduction::<LIMBS>(&product, modulus, mod_neg_inv, _r_inv)
 }
 
 pub(crate) fn square_montgomery_form<const LIMBS: usize>(
@@ -50,10 +54,10 @@ pub(crate) fn square_montgomery_form<const LIMBS: usize>(
 ) -> Uint<LIMBS> {
     #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
     if Uint::<LIMBS>::BITS == bigint::WIDTH_BITS && Uint::<LIMBS>::LIMBS == bigint::WIDTH_WORDS {
-        let mut result = core::mem::MaybeUninit::<[u32; LIMBS]>::uninit();
-        return Uint::<LIMBS>::from_words(unsafe {
+        let result = Uint::<LIMBS>::from_words(unsafe {
+            let mut out = core::mem::MaybeUninit::<[u32; LIMBS]>::uninit();
             sys_bigint(
-                result.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
+                out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
                 bigint::OP_MULTIPLY,
                 a.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 a.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
@@ -62,16 +66,20 @@ pub(crate) fn square_montgomery_form<const LIMBS: usize>(
             // a and b are in montgomery form (a' * R) and (b' * R).
             // Getting the final result ((a' * b') * R) requires removing a multiple of R.
             sys_bigint(
-                result.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
+                out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
                 bigint::OP_MULTIPLY,
-                result.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
-                r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                out.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                _r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 modulus.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
             );
-            result.assume_init()
+            out.assume_init()
         });
+        // Assert that the Prover returned the canonical representation of the result, i.e. that it
+        // is fully reduced and has no multiples of the modulus included.
+        assert!(result.ct_lt(&modulus).into());
+        result
     }
 
     let product = a.square_wide();
-    montgomery_reduction::<LIMBS>(&product, modulus, mod_neg_inv)
+    montgomery_reduction::<LIMBS>(&product, modulus, mod_neg_inv, _r_inv)
 }

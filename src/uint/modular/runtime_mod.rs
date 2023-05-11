@@ -45,10 +45,10 @@ impl<const LIMBS: usize> DynResidueParams<LIMBS> {
         let mod_neg_inv =
             Limb(Word::MIN.wrapping_sub(modulus_lo.inv_mod2k(Word::BITS as usize).limbs[0].0));
 
-        let r3 = montgomery_reduction(&r2.square_wide(), modulus, mod_neg_inv);
-
         // r must have an inverse mod modulus since the modulus does not divide 2^k.
         let r_inv = r.inv_odd_mod(modulus).0;
+
+        let r3 = montgomery_reduction(&r2.square_wide(), modulus, mod_neg_inv, &r_inv);
 
         Self {
             modulus: *modulus,
@@ -81,6 +81,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
             &product,
             &residue_params.modulus,
             residue_params.mod_neg_inv,
+            &residue_params.r_inv,
         );
 
         Self {
@@ -95,6 +96,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
             &(self.montgomery_form, Uint::ZERO),
             &self.residue_params.modulus,
             self.residue_params.mod_neg_inv,
+            &self.residue_params.r_inv,
         )
     }
 

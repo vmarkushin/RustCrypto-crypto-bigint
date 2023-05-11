@@ -70,7 +70,8 @@ mod tests {
             montgomery_reduction::<{ Modulus2::LIMBS }>(
                 &(Modulus2::R, Uint::ZERO),
                 &Modulus2::MODULUS,
-                Modulus2::MOD_NEG_INV
+                Modulus2::MOD_NEG_INV,
+                &Modulus2::R_INV,
             ),
             Uint::ONE
         );
@@ -83,7 +84,8 @@ mod tests {
             montgomery_reduction::<{ Modulus2::LIMBS }>(
                 &(Modulus2::R2, Uint::ZERO),
                 &Modulus2::MODULUS,
-                Modulus2::MOD_NEG_INV
+                Modulus2::MOD_NEG_INV,
+                &Modulus2::R_INV,
             ),
             Modulus2::R
         );
@@ -97,7 +99,8 @@ mod tests {
             montgomery_reduction::<{ Modulus2::LIMBS }>(
                 &(lo, hi),
                 &Modulus2::MODULUS,
-                Modulus2::MOD_NEG_INV
+                Modulus2::MOD_NEG_INV,
+                &Modulus2::R_INV,
             ),
             Modulus2::R
         );
@@ -113,7 +116,8 @@ mod tests {
             montgomery_reduction::<{ Modulus2::LIMBS }>(
                 &product,
                 &Modulus2::MODULUS,
-                Modulus2::MOD_NEG_INV
+                Modulus2::MOD_NEG_INV,
+                &Modulus2::R_INV,
             ),
             x
         );
@@ -137,7 +141,8 @@ mod tests {
             montgomery_reduction::<{ Modulus2::LIMBS }>(
                 &product,
                 &Modulus2::MODULUS,
-                Modulus2::MOD_NEG_INV
+                Modulus2::MOD_NEG_INV,
+                &Modulus2::R_INV,
             ),
             lo
         );

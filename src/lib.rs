@@ -5,8 +5,10 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
 )]
-// TODO(victor): Provide "safe" wrappers from risc0_zkvm_platform.
-// #![deny(unsafe_code)]
+#![cfg_attr(
+    not(all(target_os = "zkvm", target_arch = "riscv32")),
+    deny(unsafe_code)
+)]
 #![warn(
     clippy::mod_module_files,
     clippy::unwrap_used,

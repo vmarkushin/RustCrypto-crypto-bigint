@@ -18,7 +18,27 @@ pub fn montgomery_reduction<const LIMBS: usize>(
     lower_upper: &(Uint<LIMBS>, Uint<LIMBS>),
     modulus: &Uint<LIMBS>,
     mod_neg_inv: Limb,
+    _r_inv: &Uint<LIMBS>,
 ) -> Uint<LIMBS> {
+    #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+    if LIMBS == bigint::WIDTH_WORDS {
+        let result = Uint::<LIMBS>::from_words(unsafe {
+            let mut out = core::mem::MaybeUninit::<[u32; LIMBS]>::uninit();
+            // Montgomery reduction is equivalent to a reduced multiplication by R^-1.
+            sys_bigint(
+                out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
+                bigint::OP_MULTIPLY,
+                out.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                _r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                modulus.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+            );
+            out.assume_init()
+        });
+        // Assert that the Prover returned the canonical representation of the result, i.e. that it
+        // is fully reduced and has no multiples of the modulus included.
+        assert!(result.ct_lt(&modulus).into());
+        result
+    }
     const_montgomery_reduction(lower_upper, modulus, mod_neg_inv)
 }
 

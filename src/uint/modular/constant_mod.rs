@@ -89,7 +89,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     };
 
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
-    pub const fn new(integer: &Uint<LIMBS>) -> Self {
+    pub fn new(integer: &Uint<LIMBS>) -> Self {
         let product = integer.mul_wide(&MOD::R2);
         let montgomery_form =
             montgomery_reduction::<LIMBS>(&product, &MOD::MODULUS, MOD::MOD_NEG_INV);
@@ -101,7 +101,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
-    pub const fn retrieve(&self) -> Uint<LIMBS> {
+    pub fn retrieve(&self) -> Uint<LIMBS> {
         montgomery_reduction::<LIMBS>(
             &(self.montgomery_form, Uint::ZERO),
             &MOD::MODULUS,

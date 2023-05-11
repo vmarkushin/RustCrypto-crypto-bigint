@@ -35,7 +35,7 @@ pub struct DynResidueParams<const LIMBS: usize> {
 
 impl<const LIMBS: usize> DynResidueParams<LIMBS> {
     /// Instantiates a new set of `ResidueParams` representing the given `modulus`.
-    pub const fn new(modulus: &Uint<LIMBS>) -> Self {
+    pub fn new(modulus: &Uint<LIMBS>) -> Self {
         let r = Uint::MAX.const_rem(modulus).0.wrapping_add(&Uint::ONE);
         let r2 = Uint::const_rem_wide(r.square_wide(), modulus).0;
 
@@ -75,7 +75,7 @@ pub struct DynResidue<const LIMBS: usize> {
 
 impl<const LIMBS: usize> DynResidue<LIMBS> {
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
-    pub const fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
+    pub fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
         let product = integer.mul_wide(&residue_params.r2);
         let montgomery_form = montgomery_reduction(
             &product,
@@ -90,7 +90,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
-    pub const fn retrieve(&self) -> Uint<LIMBS> {
+    pub fn retrieve(&self) -> Uint<LIMBS> {
         montgomery_reduction(
             &(self.montgomery_form, Uint::ZERO),
             &self.residue_params.modulus,

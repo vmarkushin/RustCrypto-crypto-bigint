@@ -12,7 +12,7 @@ pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
     b: &Uint<LIMBS>,
     modulus: &Uint<LIMBS>,
     mod_neg_inv: Limb,
-    r_inv: &Uint<LIMBS>,
+    _r_inv: &Uint<LIMBS>,
 ) -> Uint<LIMBS> {
     #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
     if LIMBS == bigint::WIDTH_WORDS {
@@ -46,7 +46,7 @@ pub(crate) fn square_montgomery_form<const LIMBS: usize>(
     a: &Uint<LIMBS>,
     modulus: &Uint<LIMBS>,
     mod_neg_inv: Limb,
-    r_inv: &Uint<LIMBS>,
+    _r_inv: &Uint<LIMBS>,
 ) -> Uint<LIMBS> {
     #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
     if Uint::<LIMBS>::BITS == bigint::WIDTH_BITS && Uint::<LIMBS>::LIMBS == bigint::WIDTH_WORDS {

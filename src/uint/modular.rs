@@ -12,6 +12,7 @@ mod mul;
 mod pow;
 mod sub;
 
+pub use reduction::const_montgomery_reduction;
 pub use reduction::montgomery_reduction;
 
 /// A generalization for numbers kept in optimized representations (e.g. Montgomery)

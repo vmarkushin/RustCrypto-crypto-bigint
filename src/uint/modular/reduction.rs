@@ -1,5 +1,8 @@
 use crate::{Limb, Uint, WideWord, Word};
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use risc0_zkvm_platform::syscall::{bigint, sys_bigint};
+
 /// Returns `(hi, lo)` such that `hi * R + lo = x * y + z + w`.
 #[inline(always)]
 const fn muladdcarry(x: Word, y: Word, z: Word, w: Word) -> (Word, Word) {
@@ -11,7 +14,16 @@ const fn muladdcarry(x: Word, y: Word, z: Word, w: Word) -> (Word, Word) {
 }
 
 /// Algorithm 14.32 in Handbook of Applied Cryptography <https://cacr.uwaterloo.ca/hac/about/chap14.pdf>
-pub const fn montgomery_reduction<const LIMBS: usize>(
+pub fn montgomery_reduction<const LIMBS: usize>(
+    lower_upper: &(Uint<LIMBS>, Uint<LIMBS>),
+    modulus: &Uint<LIMBS>,
+    mod_neg_inv: Limb,
+) -> Uint<LIMBS> {
+    const_montgomery_reduction(lower_upper, modulus, mod_neg_inv)
+}
+
+/// Algorithm 14.32 in Handbook of Applied Cryptography <https://cacr.uwaterloo.ca/hac/about/chap14.pdf>
+pub const fn const_montgomery_reduction<const LIMBS: usize>(
     lower_upper: &(Uint<LIMBS>, Uint<LIMBS>),
     modulus: &Uint<LIMBS>,
     mod_neg_inv: Limb,

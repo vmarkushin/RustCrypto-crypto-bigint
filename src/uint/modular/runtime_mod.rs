@@ -77,7 +77,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
     pub fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
         Self {
-            montgomery_form: super::mul::into_montgomery_form(
+            montgomery_form: super::repr::into_montgomery_form(
                 integer,
                 &residue_params.r2,
                 &residue_params.modulus,
@@ -90,7 +90,7 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
     pub fn retrieve(&self) -> Uint<LIMBS> {
-        super::mul::from_montgomery_form(
+        super::repr::from_montgomery_form(
             &self.montgomery_form,
             &self.residue_params.modulus,
             self.residue_params.mod_neg_inv,

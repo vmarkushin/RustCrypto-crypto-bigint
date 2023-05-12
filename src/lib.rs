@@ -1,4 +1,4 @@
-#![no_std]
+//#![no_std]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 #![doc(
@@ -156,6 +156,9 @@
 
 #[cfg(all(feature = "alloc", test))]
 extern crate alloc;
+
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use risc0_zkvm as _;
 
 #[macro_use]
 mod nlimbs;

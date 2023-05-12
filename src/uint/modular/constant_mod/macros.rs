@@ -31,7 +31,7 @@ macro_rules! impl_modulus {
                 ),
             );
             const R3: $crate::Uint<{ $crate::nlimbs!(<$uint_type>::BITS) }> =
-                $crate::modular::const_montgomery_reduction(
+                $crate::modular::montgomery_reduction(
                     &Self::R2.square_wide(),
                     &Self::MODULUS,
                     Self::MOD_NEG_INV,

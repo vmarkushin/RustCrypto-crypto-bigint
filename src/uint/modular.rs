@@ -12,7 +12,6 @@ mod mul;
 mod pow;
 mod sub;
 
-pub use reduction::const_montgomery_reduction;
 pub use reduction::montgomery_reduction;
 
 /// A generalization for numbers kept in optimized representations (e.g. Montgomery)
@@ -71,7 +70,6 @@ mod tests {
                 &(Modulus2::R, Uint::ZERO),
                 &Modulus2::MODULUS,
                 Modulus2::MOD_NEG_INV,
-                &Modulus2::R_INV,
             ),
             Uint::ONE
         );
@@ -85,7 +83,6 @@ mod tests {
                 &(Modulus2::R2, Uint::ZERO),
                 &Modulus2::MODULUS,
                 Modulus2::MOD_NEG_INV,
-                &Modulus2::R_INV,
             ),
             Modulus2::R
         );
@@ -100,7 +97,6 @@ mod tests {
                 &(lo, hi),
                 &Modulus2::MODULUS,
                 Modulus2::MOD_NEG_INV,
-                &Modulus2::R_INV,
             ),
             Modulus2::R
         );
@@ -117,7 +113,6 @@ mod tests {
                 &product,
                 &Modulus2::MODULUS,
                 Modulus2::MOD_NEG_INV,
-                &Modulus2::R_INV,
             ),
             x
         );
@@ -142,7 +137,6 @@ mod tests {
                 &product,
                 &Modulus2::MODULUS,
                 Modulus2::MOD_NEG_INV,
-                &Modulus2::R_INV,
             ),
             lo
         );

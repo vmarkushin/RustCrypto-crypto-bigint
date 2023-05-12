@@ -4,7 +4,7 @@ use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
 
 use crate::{Limb, Uint, Zero};
 
-use super::{div_by_2::div_by_2, reduction::montgomery_reduction, Retrieve};
+use super::{div_by_2::div_by_2, Retrieve};
 
 #[cfg(feature = "rand_core")]
 use crate::{rand_core::CryptoRngCore, NonZero, Random, RandomMod};
@@ -90,20 +90,22 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
 
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
     pub fn new(integer: &Uint<LIMBS>) -> Self {
-        let product = integer.mul_wide(&MOD::R2);
-        let montgomery_form =
-            montgomery_reduction::<LIMBS>(&product, &MOD::MODULUS, MOD::MOD_NEG_INV, &MOD::R_INV);
-
         Self {
-            montgomery_form,
+            montgomery_form: super::mul::into_montgomery_form(
+                integer,
+                &MOD::R2,
+                &MOD::MODULUS,
+                MOD::MOD_NEG_INV,
+                &MOD::R,
+            ),
             phantom: PhantomData,
         }
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
     pub fn retrieve(&self) -> Uint<LIMBS> {
-        montgomery_reduction::<LIMBS>(
-            &(self.montgomery_form, Uint::ZERO),
+        super::mul::from_montgomery_form::<LIMBS>(
+            &self.montgomery_form,
             &MOD::MODULUS,
             MOD::MOD_NEG_INV,
             &MOD::R_INV,

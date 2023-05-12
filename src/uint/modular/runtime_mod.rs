@@ -35,7 +35,7 @@ pub struct DynResidueParams<const LIMBS: usize> {
 
 impl<const LIMBS: usize> DynResidueParams<LIMBS> {
     /// Instantiates a new set of `ResidueParams` representing the given `modulus`.
-    pub fn new(modulus: &Uint<LIMBS>) -> Self {
+    pub const fn new(modulus: &Uint<LIMBS>) -> Self {
         let r = Uint::MAX.const_rem(modulus).0.wrapping_add(&Uint::ONE);
         let r2 = Uint::const_rem_wide(r.square_wide(), modulus).0;
 
@@ -48,7 +48,7 @@ impl<const LIMBS: usize> DynResidueParams<LIMBS> {
         // r must have an inverse mod modulus since the modulus does not divide 2^k.
         let r_inv = r.inv_odd_mod(modulus).0;
 
-        let r3 = montgomery_reduction(&r2.square_wide(), modulus, mod_neg_inv, &r_inv);
+        let r3 = montgomery_reduction(&r2.square_wide(), modulus, mod_neg_inv);
 
         Self {
             modulus: *modulus,
@@ -76,24 +76,22 @@ pub struct DynResidue<const LIMBS: usize> {
 impl<const LIMBS: usize> DynResidue<LIMBS> {
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
     pub fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
-        let product = integer.mul_wide(&residue_params.r2);
-        let montgomery_form = montgomery_reduction(
-            &product,
-            &residue_params.modulus,
-            residue_params.mod_neg_inv,
-            &residue_params.r_inv,
-        );
-
         Self {
-            montgomery_form,
+            montgomery_form: super::mul::into_montgomery_form(
+                integer,
+                &residue_params.r2,
+                &residue_params.modulus,
+                residue_params.mod_neg_inv,
+                &residue_params.r,
+            ),
             residue_params,
         }
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
     pub fn retrieve(&self) -> Uint<LIMBS> {
-        montgomery_reduction(
-            &(self.montgomery_form, Uint::ZERO),
+        super::mul::from_montgomery_form(
+            &self.montgomery_form,
             &self.residue_params.modulus,
             self.residue_params.mod_neg_inv,
             &self.residue_params.r_inv,

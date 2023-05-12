@@ -5,6 +5,9 @@ use super::reduction::montgomery_reduction;
 #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
 use risc0_zkvm_platform::syscall::{bigint, sys_bigint};
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use subtle::ConstantTimeLess;
+
 // TODO(victor): Are there any safety concerns with the fact that the output from sys_bigint may
 // not be reduced. If so, we can introduce a check here to make sure it's less than the modulus.
 pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
@@ -30,7 +33,7 @@ pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
             sys_bigint(
                 out.as_mut_ptr() as *mut [u32; bigint::WIDTH_WORDS],
                 bigint::OP_MULTIPLY,
-                result.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
+                out.as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 _r_inv.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
                 modulus.as_words().as_ptr() as *const [u32; bigint::WIDTH_WORDS],
             );
@@ -38,8 +41,8 @@ pub(crate) fn mul_montgomery_form<const LIMBS: usize>(
         });
         // Assert that the Prover returned the canonical representation of the result, i.e. that it
         // is fully reduced and has no multiples of the modulus included.
-        assert!(result.ct_lt(&modulus).into());
-        result
+        assert!(bool::from(result.ct_lt(&modulus)));
+        return result;
     }
 
     let product = a.mul_wide(b);
@@ -76,8 +79,8 @@ pub(crate) fn square_montgomery_form<const LIMBS: usize>(
         });
         // Assert that the Prover returned the canonical representation of the result, i.e. that it
         // is fully reduced and has no multiples of the modulus included.
-        assert!(result.ct_lt(&modulus).into());
-        result
+        assert!(bool::from(result.ct_lt(&modulus)));
+        return result;
     }
 
     let product = a.square_wide();

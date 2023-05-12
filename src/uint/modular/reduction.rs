@@ -3,6 +3,9 @@ use crate::{Limb, Uint, WideWord, Word};
 #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
 use risc0_zkvm_platform::syscall::{bigint, sys_bigint};
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use subtle::ConstantTimeLess;
+
 /// Returns `(hi, lo)` such that `hi * R + lo = x * y + z + w`.
 #[inline(always)]
 const fn muladdcarry(x: Word, y: Word, z: Word, w: Word) -> (Word, Word) {
@@ -36,8 +39,8 @@ pub fn montgomery_reduction<const LIMBS: usize>(
         });
         // Assert that the Prover returned the canonical representation of the result, i.e. that it
         // is fully reduced and has no multiples of the modulus included.
-        assert!(result.ct_lt(&modulus).into());
-        result
+        assert!(bool::from(result.ct_lt(&modulus)));
+        return result;
     }
     const_montgomery_reduction(lower_upper, modulus, mod_neg_inv)
 }

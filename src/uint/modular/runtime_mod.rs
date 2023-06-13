@@ -2,6 +2,9 @@ use crate::{Limb, Uint, Word};
 
 use super::{div_by_2::div_by_2, reduction::montgomery_reduction, Retrieve};
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use crate::risc0;
+
 /// Additions between residues with a modulus set at runtime
 mod runtime_add;
 /// Multiplicative inverses of residues with a modulus set at runtime
@@ -33,7 +36,7 @@ pub struct DynResidueParams<const LIMBS: usize> {
 
 impl<const LIMBS: usize> DynResidueParams<LIMBS> {
     /// Instantiates a new set of `ResidueParams` representing the given `modulus`.
-    pub const fn new(modulus: &Uint<LIMBS>) -> Self {
+    pub fn new(modulus: &Uint<LIMBS>) -> Self {
         let r = Uint::MAX.const_rem(modulus).0.wrapping_add(&Uint::ONE);
         let r2 = Uint::const_rem_wide(r.square_wide(), modulus).0;
 
@@ -69,7 +72,21 @@ pub struct DynResidue<const LIMBS: usize> {
 
 impl<const LIMBS: usize> DynResidue<LIMBS> {
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
-    pub const fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
+    pub fn new(integer: &Uint<LIMBS>, residue_params: DynResidueParams<LIMBS>) -> Self {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            // When working with U256 in the RISC Zero zkVM, leave the value in standard form.
+            // Ensure that the input is reduced by passing it though a modmul by one.
+            return Self {
+                montgomery_form: risc0::modmul_uint_256(
+                    &integer,
+                    &Uint::<LIMBS>::ONE,
+                    &residue_params.modulus,
+                ),
+                residue_params,
+            };
+        }
+
         let product = integer.mul_wide(&residue_params.r2);
         let montgomery_form = montgomery_reduction(
             &product,
@@ -84,7 +101,13 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
-    pub const fn retrieve(&self) -> Uint<LIMBS> {
+    pub fn retrieve(&self) -> Uint<LIMBS> {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            // In the RISC Zero zkVM 256-bit residues are represented in standard form.
+            return self.montgomery_form;
+        }
+
         montgomery_reduction(
             &(self.montgomery_form, Uint::ZERO),
             &self.residue_params.modulus,
@@ -102,6 +125,14 @@ impl<const LIMBS: usize> DynResidue<LIMBS> {
 
     /// Instantiates a new `Residue` that represents 1.
     pub const fn one(residue_params: DynResidueParams<LIMBS>) -> Self {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            return Self {
+                montgomery_form: Uint::<LIMBS>::ONE,
+                residue_params,
+            };
+        }
+
         Self {
             montgomery_form: residue_params.r,
             residue_params,

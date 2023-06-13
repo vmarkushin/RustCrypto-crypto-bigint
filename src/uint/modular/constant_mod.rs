@@ -16,6 +16,9 @@ use {
     serdect::serde::{Deserialize, Deserializer, Serialize, Serializer},
 };
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use crate::risc0;
+
 /// Additions between residues with a constant modulus
 mod const_add;
 /// Multiplicative inverses of residues with a constant modulus
@@ -81,13 +84,44 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     };
 
     /// The representation of 1 mod `MOD`.
+    #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+    pub const ONE: Self = {
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            Self {
+                montgomery_form: Uint::<LIMBS>::ONE,
+                phantom: PhantomData,
+            }
+        } else {
+            Self {
+                montgomery_form: MOD::R,
+                phantom: PhantomData,
+            }
+        }
+    };
+
+    /// The representation of 1 mod `MOD`.
+    #[cfg(not(all(target_os = "zkvm", target_arch = "riscv32")))]
     pub const ONE: Self = Self {
         montgomery_form: MOD::R,
         phantom: PhantomData,
     };
 
     /// Instantiates a new `Residue` that represents this `integer` mod `MOD`.
-    pub const fn new(integer: &Uint<LIMBS>) -> Self {
+    pub fn new(integer: &Uint<LIMBS>) -> Self {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            // When working with U256 in the RISC Zero zkVM, leave the value in standard form.
+            // Ensure that the input is reduced by passing it though a modmul by one.
+            return Self {
+                montgomery_form: risc0::modmul_uint_256(
+                    &integer,
+                    &Uint::<LIMBS>::ONE,
+                    &MOD::MODULUS,
+                ),
+                phantom: PhantomData,
+            };
+        }
+
         let product = integer.mul_wide(&MOD::R2);
         let montgomery_form =
             montgomery_reduction::<LIMBS>(&product, &MOD::MODULUS, MOD::MOD_NEG_INV);
@@ -99,7 +133,13 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     }
 
     /// Retrieves the integer currently encoded in this `Residue`, guaranteed to be reduced.
-    pub const fn retrieve(&self) -> Uint<LIMBS> {
+    pub fn retrieve(&self) -> Uint<LIMBS> {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            // In the RISC Zero zkVM 256-bit residues are represented in standard form.
+            return self.montgomery_form;
+        }
+
         montgomery_reduction::<LIMBS>(
             &(self.montgomery_form, Uint::ZERO),
             &MOD::MODULUS,
@@ -181,6 +221,19 @@ where
     {
         Uint::<LIMBS>::deserialize(deserializer).and_then(|montgomery_form| {
             if Uint::ct_lt(&montgomery_form, &MOD::MODULUS).into() {
+                #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+                if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+                    const R_INV: Uint<LIMBS> = &MOD::R.inv_odd_mod(&MOD::MODULUS);
+
+                    // In the RISC Zero zkVM 256-bit residues are represented in standard form.
+                    // To ensure this is interoperable with the host, convert to standard form.
+                    let value = risc0::modmul_uint_256(&montgomery_form, &R_INV, &MOD::MODULUS);
+                    return Ok(Self {
+                        value,
+                        phantom: PhantomData,
+                    });
+                }
+
                 Ok(Self {
                     montgomery_form,
                     phantom: PhantomData,
@@ -202,6 +255,14 @@ where
     where
         S: Serializer,
     {
+        #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+        if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+            // In the RISC Zero zkVM 256-bit residues are represented in standard form.
+            // To ensure this is interoperable with the host, convert to Montgomery form.
+            let value = risc0::modmul_uint_256(&self.montgomery_form, &MOD::R, &MOD::MODULUS);
+            return value.serialize(serializer);
+        }
+
         self.montgomery_form.serialize(serializer)
     }
 }

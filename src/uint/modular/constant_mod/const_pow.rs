@@ -4,7 +4,7 @@ use super::{Residue, ResidueParams};
 
 impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     /// Raises to the `exponent` power.
-    pub const fn pow(&self, exponent: &Uint<LIMBS>) -> Residue<MOD, LIMBS> {
+    pub fn pow(&self, exponent: &Uint<LIMBS>) -> Residue<MOD, LIMBS> {
         self.pow_bounded_exp(exponent, Uint::<LIMBS>::BITS)
     }
 
@@ -13,7 +13,7 @@ impl<MOD: ResidueParams<LIMBS>, const LIMBS: usize> Residue<MOD, LIMBS> {
     /// to take into account for the exponent.
     ///
     /// NOTE: `exponent_bits` may be leaked in the time pattern.
-    pub const fn pow_bounded_exp(
+    pub fn pow_bounded_exp(
         &self,
         exponent: &Uint<LIMBS>,
         exponent_bits: usize,
@@ -78,6 +78,17 @@ mod tests {
         let expected =
             U256::from_be_hex("89E2A4E99F649A5AE2C18068148C355CA927B34A3245C938178ED00D6EF218AA");
         assert_eq!(res.retrieve(), expected);
+    }
+
+    #[test]
+    fn test_powmod_zero_exponent() {
+        let base =
+            U256::from_be_hex("3435D18AA8313EBBE4D20002922225B53F75DC4453BB3EEC0378646F79B524A4");
+        let base_mod = const_residue!(base, Modulus);
+
+        let res = base_mod.pow(&U256::ZERO);
+
+        assert_eq!(res.retrieve(), U256::ONE);
     }
 
     #[test]

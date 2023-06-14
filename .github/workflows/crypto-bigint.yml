@@ -37,7 +37,7 @@ jobs:
       - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
+          targets: ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features der
@@ -71,7 +71,7 @@ jobs:
       - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
+          targets: ${{ matrix.target }}
       - run: ${{ matrix.deps }}
       - run: cargo test --target ${{ matrix.target }} --release --no-default-features
       - run: cargo test --target ${{ matrix.target }} --release
@@ -97,7 +97,7 @@ jobs:
       - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
+          targets: ${{ matrix.target }}
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release --no-default-features
       - run: cross test --target ${{ matrix.target }} --release

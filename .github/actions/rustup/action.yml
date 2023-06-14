@@ -30,8 +30,12 @@ runs:
     - run: rustup default ${{ inputs.toolchain }}
       shell: bash
 
+    - if: ${{ inputs.targets != '' }}
+      run: rustup target add ${{ inputs.targets }}
+      shell: bash
+
     - if: ${{ inputs.components != '' }}
-      run: rustup component add --toolchain ${{ inputs.toolchain }} ${{ inputs.components }}
+      run: rustup component add ${{ inputs.components }}
       shell: bash
 
     - run: echo CARGO_TERM_COLOR=always >> $GITHUB_ENV

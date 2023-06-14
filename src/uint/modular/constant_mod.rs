@@ -223,7 +223,8 @@ where
             if Uint::ct_lt(&montgomery_form, &MOD::MODULUS).into() {
                 #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
                 if LIMBS == risc0::BIGINT_WIDTH_WORDS {
-                    let r_inv: Uint<LIMBS> = MOD::R.inv_odd_mod(&MOD::MODULUS);
+                    // const function with const inputs should be computed at compile-time.
+                    let r_inv: Uint<LIMBS> = MOD::R.inv_odd_mod(&MOD::MODULUS).0;
 
                     // In the RISC Zero zkVM 256-bit residues are represented in standard form.
                     // To ensure this is interoperable with the host, convert to standard form.

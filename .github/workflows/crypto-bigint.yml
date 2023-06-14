@@ -32,7 +32,7 @@ jobs:
           - wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -66,7 +66,7 @@ jobs:
             rust: stable
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: ${{ matrix.deps }}
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: stable
       - run: cargo run --release
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: 1.65.0
           components: clippy
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: stable
           components: rustfmt
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: 1.65.0
       - run: cargo build --all-features --benches
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: stable
       - run: cargo doc --all-features
@@ -158,10 +158,10 @@ jobs:
       #RUSTC_WRAPPER: sccache
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test
         with:
           toolchain: nightly-2023-03-06
-      - uses: ./.github/actions/sccache
+      - uses: risc0/risc0/.github/actions/sccache@victor/cargo-risczero-test
         # DO NOT MERGE: Reference to "victor" branch.
       - run: cargo install cargo-risczero --git https://github.com/risc0/risc0 --branch victor/cargo-risczero-test
       - run: cargo risczero test -- --release --all-features

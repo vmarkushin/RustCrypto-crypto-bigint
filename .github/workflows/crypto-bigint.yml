@@ -154,8 +154,10 @@ jobs:
 
   risczero-test:
     runs-on: ubuntu-latest
+    # TODO(victor): Investigate why sccache breaks cargo risczero test.
+    #   Not a major issue because we expect only infrequent changes to this repo.
     #env:
-      #RUSTC_WRAPPER: sccache
+    #  RUSTC_WRAPPER: sccache
     steps:
       - uses: actions/checkout@v3
       - uses: risc0/risc0/.github/actions/rustup@victor/cargo-risczero-test

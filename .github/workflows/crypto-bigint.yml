@@ -9,10 +9,17 @@ on:
     paths-ignore:
       - README.md
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_INCREMENTAL: 0
   RUSTFLAGS: "-Dwarnings"
   RUSTDOCFLAGS: "-Dwarnings"
+  RUST_BACKTRACE: full
+  # TODO(victor): Test what impact ussing sscache will have.
+  #RUSTC_WRAPPER: sccache
 
 jobs:
   build:
@@ -27,10 +34,10 @@ jobs:
           - wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          targets: ${{ matrix.target }}
+          target: ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features alloc
       - run: cargo build --target ${{ matrix.target }} --release --no-default-features --features der
@@ -61,10 +68,10 @@ jobs:
             rust: stable
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          targets: ${{ matrix.target }}
+          target: ${{ matrix.target }}
       - run: ${{ matrix.deps }}
       - run: cargo test --target ${{ matrix.target }} --release --no-default-features
       - run: cargo test --target ${{ matrix.target }} --release
@@ -87,10 +94,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: ${{ matrix.deps }}
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: ${{ matrix.rust }}
-          targets: ${{ matrix.target }}
+          target: ${{ matrix.target }}
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release --no-default-features
       - run: cross test --target ${{ matrix.target }} --release
@@ -101,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: stable
       - run: cargo run --release
@@ -113,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: 1.65.0
           components: clippy
@@ -123,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: stable
           components: rustfmt
@@ -133,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: 1.65.0
       - run: cargo build --all-features --benches
@@ -142,7 +149,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
+      - uses: ./.github/actions/rustup
         with:
           toolchain: stable
       - run: cargo doc --all-features
+
+  risczero-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/rustup
+        with:
+          toolchain: nightly-2023-03-06
+        # DO NOT MERGE: Reference to "victor" branch.
+      - run: cargo +nightly-2023-03-06 install cargo-risczero --git https://github.com/risc0/risc0 --branch victor/cargo-risczero-test
+      - run: cargo +nightly-2023-03-06 risczero test -- --release --all-features

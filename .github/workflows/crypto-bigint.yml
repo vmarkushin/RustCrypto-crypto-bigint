@@ -154,7 +154,7 @@ jobs:
 
   risczero-test:
     runs-on: ubuntu-latest
-    env:
+    #env:
       #RUSTC_WRAPPER: sccache
     steps:
       - uses: actions/checkout@v3

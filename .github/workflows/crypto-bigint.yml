@@ -157,6 +157,7 @@ jobs:
     runs-on: [self-hosted, prod, Linux, cpu]
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           repository: risc0/risc0
       - uses: risc0/risc0/.github/actions/rustup@main
@@ -164,5 +165,5 @@ jobs:
       - run: cargo install cargo-risczero
       - run: cargo risczero install
       # rebuild with the latest cargo-risczero with the experimental feature
-      - run: cargo install cargo-risczero --path risc0/risc0/cargo-risczero --features experimental
+      - run: cargo install cargo-risczero --path $GITHUB_WORKSPACE/risc0/risc0/cargo-risczero --features experimental
       - run: cargo risczero test -- --release --all-features

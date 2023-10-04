@@ -160,10 +160,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: risc0/risc0
+          path: ./risc0
       - uses: risc0/risc0/.github/actions/rustup@main
       # install the risc0 toolchain using the latest release of cargo-risczero
       - run: cargo install cargo-risczero
       - run: cargo risczero install
       # rebuild with the latest cargo-risczero with the experimental feature
-      - run: cargo install cargo-risczero --path $GITHUB_WORKSPACE/risc0/risc0/cargo-risczero --features experimental
+      - run: cargo install cargo-risczero --path ./risc0/risc0/risc0/cargo-risczero --features experimental
       - run: cargo risczero test -- --release --all-features

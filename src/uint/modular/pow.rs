@@ -2,11 +2,14 @@ use crate::{Limb, Uint, Word};
 
 use super::mul::{mul_montgomery_form, square_montgomery_form};
 
+#[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+use crate::risc0;
+
 /// Performs modular exponentiation using Montgomery's ladder.
 /// `exponent_bits` represents the number of bits to take into account for the exponent.
 ///
 /// NOTE: this value is leaked in the time pattern.
-pub const fn pow_montgomery_form<const LIMBS: usize, const RHS_LIMBS: usize>(
+pub fn pow_montgomery_form<const LIMBS: usize, const RHS_LIMBS: usize>(
     x: &Uint<LIMBS>,
     exponent: &Uint<RHS_LIMBS>,
     exponent_bits: usize,
@@ -14,15 +17,25 @@ pub const fn pow_montgomery_form<const LIMBS: usize, const RHS_LIMBS: usize>(
     r: &Uint<LIMBS>,
     mod_neg_inv: Limb,
 ) -> Uint<LIMBS> {
+    #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+    let one = if LIMBS == risc0::BIGINT_WIDTH_WORDS {
+        Uint::<LIMBS>::ONE
+    } else {
+        *r // 1 in Montgomery form
+    };
+
+    #[cfg(not(all(target_os = "zkvm", target_arch = "riscv32")))]
+    let one = *r; // 1 in Montgomery form
+
     if exponent_bits == 0 {
-        return *r; // 1 in Montgomery form
+        return one;
     }
 
     const WINDOW: usize = 4;
     const WINDOW_MASK: Word = (1 << WINDOW) - 1;
 
     // powers[i] contains x^i
-    let mut powers = [*r; 1 << WINDOW];
+    let mut powers = [one; 1 << WINDOW];
     powers[1] = *x;
     let mut i = 2;
     while i < powers.len() {
@@ -35,7 +48,7 @@ pub const fn pow_montgomery_form<const LIMBS: usize, const RHS_LIMBS: usize>(
     let starting_window = starting_bit_in_limb / WINDOW;
     let starting_window_mask = (1 << (starting_bit_in_limb % WINDOW + 1)) - 1;
 
-    let mut z = *r; // 1 in Montgomery form
+    let mut z = one;
 
     let mut limb_num = starting_limb + 1;
     while limb_num > 0 {
